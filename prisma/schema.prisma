@@ -1,0 +1,438 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Role {
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  name          String?
+  email         String?    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  roleId        String?
+  role          Role?      @relation(fields: [roleId], references: [id])
+  sessions      Session[]
+  Customer      Customer[]
+}
+
+model Product {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  serialNumer        String         @default("XXXX-XXXX-XXXX-XXXX")
+  boughtAt           DateTime       @default(now())
+  warrantyExpiration DateTime?
+  warranty           String?
+  ProductStatus      ProductStatus? @relation(fields: [productStatusId], references: [id], onUpdate: Cascade)
+  productStatusId    String?
+  CartItem           CartItem[]
+  Model              Model?         @relation(fields: [modelId], references: [id])
+  modelId            String?
+  Order              Order[]
+  Maintenance        Maintenance[]
+}
+
+model Maintenance {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  description         String
+  price               Decimal
+  estimatedTime       DateTime
+  Product             Product?           @relation(fields: [productId], references: [id])
+  productId           String?
+  maintenanceStatus   MaintenanceStatus? @relation(fields: [maintenanceStatusId], references: [id], onUpdate: Cascade)
+  maintenanceStatusId String?
+}
+
+model MaintenanceStatus {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  maintenances Maintenance[]
+}
+
+model ProductStatus {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Model {
+  id          String      @id @default(cuid())
+  name        String      @default("Product")
+  price       Decimal     @default(0)
+  img         String      @default("")
+  description String      @default("Descripton")
+  categoryId  String?
+  isActive    Boolean     @default(true)
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  Analytics   Analytics[]
+  Products    Product[]
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String  @default("Category")
+  description String  @default("Description")
+  products    Model[]
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  number       Int         @unique
+  contractorId String
+  statusId     String
+  price        Decimal
+  createdAt    DateTime    @default(now())
+  rentStart    DateTime?
+  rentEnd      DateTime?
+  rentDays     Int         @default(0)
+  status       OrderStatus @relation(fields: [statusId], references: [id])
+  customer     Customer    @relation(fields: [contractorId], references: [id])
+  products     Product[]
+}
+
+model OrderStatus {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String?
+  lastOrder DateTime?
+  createdAt DateTime  @default(now())
+  adressId  String
+  adress    Adress    @relation(fields: [adressId], references: [id])
+  Orders    Order[]
+  User      User?     @relation(fields: [userId], references: [id])
+  userId    String?
+}
+
+model Adress {
+  id         String     @id @default(cuid())
+  street     String
+  building   String
+  unit       String?
+  city       String
+  zip        String
+  createdAt  DateTime   @default(now())
+  contractor Customer[]
+}
+
+model Raports {
+  id        String   @id @default(cuid())
+  createdAt DateTime
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  ip      String
+  model   Model  @relation(fields: [modelId], references: [id])
+  modelId String
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  CartItem  CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  Invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  invoiceId String?
+}
+
+model Invoice {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  number    Int        @unique
+  price     Decimal
+  status    String
+  CartItem  CartItem[]
+  Payment   Payment[]
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  number    Int      @unique
+  price     Decimal
+  status    String
+  Invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  invoiceId String?
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  value     String
+}
+
+model Email {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  email     String
+  name      String
+  subject   String
+  message   String
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  subject   String
+  message   String
+}
+
+model EmailTemplateVariable {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  value     String
+}
+
+model EmailTemplateVariableType {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  value     String
+}
+
+model Kanban {
+  id        String         @id @default(cuid())
+  createdAt DateTime       @default(now())
+  name      String
+  columns   KanbanColumn[]
+}
+
+model KanbanColumn {
+  id        String       @id @default(cuid())
+  createdAt DateTime     @default(now())
+  name      String
+  kanbanId  String
+  kanban    Kanban       @relation(fields: [kanbanId], references: [id])
+  tasks     KanbanTask[]
+}
+
+model KanbanTask {
+  id                                String                              @id @default(cuid())
+  createdAt                         DateTime                            @default(now())
+  name                              String
+  columnId                          String
+  column                            KanbanColumn                        @relation(fields: [columnId], references: [id])
+  KanbanTaskComment                 KanbanTaskComment[]
+  KanbanTaskAttachment              KanbanTaskAttachment[]
+  KanbanTaskLabel                   KanbanTaskLabel[]
+  KanbanTaskChecklist               KanbanTaskChecklist[]
+  KanbanTaskChecklistItem           KanbanTaskChecklistItem[]
+  KanbanTaskChecklistItemComment    KanbanTaskChecklistItemComment[]
+  KanbanTaskChecklistItemAttachment KanbanTaskChecklistItemAttachment[]
+  KanbanTaskChecklistItemLabel      KanbanTaskChecklistItemLabel[]
+  KanbanTaskCommentAttachment       KanbanTaskCommentAttachment[]
+  KanbanTaskCommentLabel            KanbanTaskCommentLabel[]
+  KanbanTaskAttachmentLabel         KanbanTaskAttachmentLabel[]
+}
+
+model KanbanTaskComment {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskAttachment {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskLabel {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskChecklist {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskChecklistItem {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskChecklistItemComment {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskChecklistItemAttachment {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskChecklistItemLabel {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskCommentAttachment {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskCommentLabel {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model KanbanTaskAttachmentLabel {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  taskId    String
+  task      KanbanTask @relation(fields: [taskId], references: [id])
+}
+
+model Employee {
+  id              String            @id @default(cuid())
+  createdAt       DateTime          @default(now())
+  name            String
+  email           String
+  phone           String
+  address         String
+  city            String
+  zip             String
+  country         String
+  status          String
+  role            EmployeeRole      @relation(fields: [roleId], references: [id])
+  roleId          String
+  avatar          String?
+  password        String?
+  token           String?
+  lastLogin       DateTime?
+  Position        Position?         @relation(fields: [positionId], references: [id])
+  positionId      String?
+  Salary          Salary?           @relation(fields: [salaryId], references: [id])
+  salaryId        String?
+  bonus           String?
+  AbsenceTracking AbsenceTracking[]
+  TimeOffRequest  TimeOffRequest[]
+}
+
+model EmployeeRole {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  status    String
+  Employee  Employee[]
+}
+
+model Position {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  name      String
+  status    String
+  Employee  Employee[]
+}
+
+model Salary {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  basic     String
+  status    String
+  Employee  Employee[]
+}
+
+model TimeOffRequest {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  Employee        Employee       @relation(fields: [employeeId], references: [id])
+  employeeId      String
+  start           DateTime
+  end             DateTime
+  reason          String
+  RequestStatus   RequestStatus? @relation(fields: [requestStatusId], references: [id])
+  requestStatusId String?
+}
+
+model RequestStatus {
+  id             String           @id @default(cuid())
+  createdAt      DateTime         @default(now())
+  name           String
+  status         String
+  TimeOffRequest TimeOffRequest[]
+}
+
+model AbsenceTracking {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  Employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId String
+  date       DateTime
+}

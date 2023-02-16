@@ -31,7 +31,18 @@ export class OrderController {
       );
     }
   }
-
+  @Get()
+  findAll() {
+    return this.orderService.findAll();
+  }
+  @Get('count')
+  count() {
+    return this.orderService.count();
+  }
+  @Get('revenue')
+  revenue() {
+    return this.orderService.revenue();
+  }
   @Get('in-progress')
   findInProgress() {
     return this.orderService.findInProgress();
@@ -50,7 +61,23 @@ export class OrderController {
   findExceded() {
     return this.orderService.findExceded();
   }
+  @Get('status')
+  findStatus() {
+    return this.orderService.findStatuses();
+  }
 
+  @Post('status')
+  createStatus(@Body() status: { name: string }) {
+    return this.orderService.createStatus(status);
+  }
+  @Patch('status/:id')
+  updateStatus(@Param('id') id: string, @Body() status: { name: string }) {
+    return this.orderService.updateStatus(id, status);
+  }
+  @Delete('status/:id')
+  deleteStatus(@Param('id') id: string) {
+    return this.orderService.deleteStatus(id);
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.orderService.findOne(id);

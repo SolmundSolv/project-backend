@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsNotEmpty, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -13,7 +19,6 @@ export class CreateProductDto {
   readonly description: string;
 
   @IsString()
-  @IsNotEmpty()
   readonly img: string;
 
   @IsString()
@@ -21,4 +26,7 @@ export class CreateProductDto {
 
   @IsBoolean()
   readonly isActive: boolean;
+
+  @IsArray()
+  readonly attributes: { name: string; value: string }[];
 }

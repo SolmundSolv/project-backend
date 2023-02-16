@@ -20,6 +20,14 @@ export class ProductService {
             id: createProductDto.category,
           },
         },
+        ModelDetails: {
+          create: createProductDto.attributes.map((item) => {
+            return {
+              name: item.name,
+              value: item.value,
+            };
+          }),
+        },
       },
     });
   }
@@ -33,19 +41,35 @@ export class ProductService {
   }
 
   async findOne(id: string) {
+    const availableQuantity = await this.prisma.product.count({
+      where: {
+        modelId: id,
+        ProductStatus: {
+          id: 'clb3fhehx0000tk74rm7oibs7',
+        },
+      },
+    });
+    console.log('availableQuantity', availableQuantity);
     const res = await this.prisma.model.findUnique({
       where: {
         id: id,
       },
       include: {
         category: true,
+        ModelDetails: {
+          where: {
+            modelId: id,
+          },
+        },
       },
     });
-    return res;
+    //add available quantity to response
+    console.log({ ...res, availableQuantity });
+    return { ...res, availableQuantity };
   }
 
-  update(id: string, updateProductDto: UpdateProductDto) {
-    return this.prisma.model.update({
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    return await this.prisma.model.update({
       where: {
         id: id,
       },
@@ -59,6 +83,14 @@ export class ProductService {
           connect: {
             id: updateProductDto.category,
           },
+        },
+        ModelDetails: {
+          create: updateProductDto.attributes.map((item) => {
+            return {
+              name: item.name,
+              value: item.value,
+            };
+          }),
         },
       },
     });
@@ -86,6 +118,27 @@ export class ProductService {
         category: true,
       },
     });
+    return res;
+  }
+
+  async byCategory(id: string) {
+    const res = await this.prisma.model.findMany({
+      where: {
+        category: {
+          name: {
+            contains: id,
+          },
+        },
+      },
+      include: {
+        category: true,
+      },
+    });
+    return res;
+  }
+
+  async category() {
+    const res = await this.prisma.category.findMany();
     return res;
   }
 }

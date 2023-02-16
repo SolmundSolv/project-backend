@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ModelModule } from './model/model.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -11,11 +11,31 @@ import { AnalyticMiddleware } from './middleware/analytics.middleware';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ProductController } from './model/model.controller';
 import { EmployeeModule } from './employee/employee.module';
+import { KanbanTasksModule } from './kanban-tasks/kanban-tasks.module';
+import { ImageModule } from './image/image.module';
+import { CartModule } from './cart/cart.module';
+import { EmailModule } from './email/email.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { PageModule } from './page/page.module';
+import { NavigationModule } from './navigation/navigation.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          service: 'gmail',
+          auth: {
+            user: 'konradqxd@gmail.com',
+            pass: configService.get('EMAIL_PASS'),
+          },
+        },
+      }),
+      inject: [ConfigService],
     }),
     ModelModule,
     AuthModule,
@@ -25,6 +45,12 @@ import { EmployeeModule } from './employee/employee.module';
     ProductModule,
     AnalyticsModule,
     EmployeeModule,
+    KanbanTasksModule,
+    ImageModule,
+    CartModule,
+    EmailModule,
+    PageModule,
+    NavigationModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -36,3 +62,4 @@ export class AppModule implements NestModule {
       .forRoutes(ProductController);
   }
 }
+//Q: regex when word has not "."

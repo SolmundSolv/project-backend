@@ -38,6 +38,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         },
       },
     });
-    return user;
+    const customer = await this.prisma.customer.findFirst({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        phone: true,
+        adress: true,
+      },
+    });
+
+    return { ...user, ...customer };
   }
 }

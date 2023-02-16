@@ -21,17 +21,20 @@ export class AnalyticMiddleware implements NestMiddleware {
       })
       .then((res) => {
         if (res.length == 0) {
-          let res = this.prisma.analytics.create({
-            data: {
-              ip: req.ip,
-              model: {
-                connect: {
-                  id: modelId,
+          try {
+            this.prisma.analytics.create({
+              data: {
+                ip: req.ip,
+                model: {
+                  connect: {
+                    id: modelId,
+                  },
                 },
               },
-            },
-          });
-          res.then((res) => {});
+            });
+          } catch (err) {
+            console.log(err);
+          }
         }
       });
 

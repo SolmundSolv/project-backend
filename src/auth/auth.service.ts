@@ -14,12 +14,14 @@ export class AuthService {
     private config: ConfigService,
   ) {}
   async signup(user: AuthDto) {
+    console.log(user);
     //generate salt to hash password
     const hash = await argon.hash(user.password);
     //create user
     try {
       const newUser = await this.prisma.user.create({
         data: {
+          name: user.name,
           email: user.email,
           password: hash,
         },
@@ -67,6 +69,19 @@ export class AuthService {
     if (!foundUser) {
       throw new ForbiddenException('User not found');
     }
+    //find if user has active session
+    const activeSession = await this.prisma.session.findFirst({
+      where: {
+        userId: foundUser.id,
+      },
+    });
+    if (activeSession) {
+      this.prisma.session.delete({
+        where: {
+          id: activeSession.id,
+        },
+      });
+    }
     //compare password
     const isValid = await argon.verify(foundUser.password, user.password);
     if (!isValid) throw new ForbiddenException('Invalid password');
@@ -97,6 +112,29 @@ export class AuthService {
       secret: this.config.get('JWT_SECRET'),
       expiresIn: '1d',
     });
+    //create session in db
+    await this.prisma.session.create({
+      data: {
+        sessionToken: token,
+        userId,
+        expires: new Date(Date.now() + 86400000),
+      },
+    });
     return { access_token: token };
+  }
+
+  async validateToken(token: string) {
+    const payload = await this.jwt.verifyAsync(token, {
+      secret: this.config.get('JWT_SECRET'),
+    });
+    return payload;
+  }
+
+  async logout(token: string) {
+    await this.prisma.session.delete({
+      where: {
+        sessionToken: token,
+      },
+    });
   }
 }

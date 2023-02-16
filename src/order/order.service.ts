@@ -12,6 +12,55 @@ export class OrderService {
   constructor(private prisma: PrismaService) {}
   //done and working
   async create(createOrderDto: CreateOrderDto) {
+    let customer = createOrderDto.customer;
+    console.log(createOrderDto);
+    if (!createOrderDto.customer) {
+      const res = await this.prisma.customer.create({
+        data: {
+          name: createOrderDto.name,
+          phone: createOrderDto.phone,
+          adress: {
+            create: {
+              city: createOrderDto.city,
+              street: createOrderDto.address,
+              building: createOrderDto.building,
+              zip: createOrderDto.zip,
+            },
+          },
+        },
+      });
+      customer = res.id;
+    } else {
+      const res = await this.prisma.customer.findFirst({
+        where: {
+          userId: createOrderDto.customer,
+        },
+      });
+      if (!res) {
+        const response = await this.prisma.customer.create({
+          data: {
+            name: createOrderDto.name,
+            phone: createOrderDto.phone,
+            adress: {
+              create: {
+                city: createOrderDto.city,
+                street: createOrderDto.address,
+                building: createOrderDto.building,
+                zip: createOrderDto.zip,
+              },
+            },
+            User: {
+              connect: {
+                id: createOrderDto.customer,
+              },
+            },
+          },
+        });
+        customer = response.id;
+      } else {
+        customer = res.id;
+      }
+    }
     const products = await this.findAvailableProduct(createOrderDto.items);
     const number = await this.numberOfOrders();
     const res = await this.prisma.order.create({
@@ -32,7 +81,7 @@ export class OrderService {
         },
         customer: {
           connect: {
-            id: createOrderDto.contractor,
+            id: customer,
           },
         },
         rentDays: createOrderDto.rentDays,
@@ -42,9 +91,33 @@ export class OrderService {
         customer: true,
       },
     });
+
+    this.prisma.cart.delete({
+      where: {
+        id: createOrderDto.cartId,
+      },
+    });
+
+    for (let i = 0; i < products.length; i++) {
+      await this.prisma.productHistory.create({
+        data: {
+          Product: {
+            connect: {
+              id: products[i].id,
+            },
+          },
+          Order: {
+            connect: {
+              id: res.id,
+            },
+          },
+        },
+      });
+    }
+    console.log('Change product status');
     this.changeProductStatus(
       products.map((item) => item.id),
-      'clb3fhehx0002tk748d3ies88', //in use
+      'clda6pydg0004tkr46f1wfjqj', //in Order
     );
 
     return res;
@@ -118,6 +191,15 @@ export class OrderService {
       console.log(error);
       return error;
     }
+  }
+
+  async findAll() {
+    const res = await this.prisma.order.findMany({
+      include: {
+        status: true,
+      },
+    });
+    return res;
   }
 
   async findInProgress() {
@@ -213,8 +295,7 @@ export class OrderService {
       },
     });
     //update order price
-    const newOrderPrice =
-      orderPrice.price.toNumber() - productPrice.price.toNumber();
+    const newOrderPrice = orderPrice.price.toNumber() - productPrice.price;
     return this.prisma.order.update({
       where: {
         id: orderId,
@@ -254,7 +335,7 @@ export class OrderService {
     const items = await this.findAvailableProduct(arr);
     this.changeProductStatus(
       items.map((item) => item.id),
-      'clb3fhehx0002tk748d3ies88', //in useq
+      'clda6pydg0004tkr46f1wfjqj', //in order
     );
 
     return this.prisma.order.update({
@@ -290,11 +371,7 @@ export class OrderService {
   async cancelOrder(orderId: string) {
     const products = await this.prisma.product.findMany({
       where: {
-        Order: {
-          every: {
-            id: orderId,
-          },
-        },
+        orderId: orderId,
       },
       select: {
         id: true,
@@ -318,23 +395,16 @@ export class OrderService {
   }
 
   async completeOrder(orderId: string) {
-    const products = await this.prisma.product.findMany({
+    const products = await this.prisma.product.updateMany({
       where: {
-        Order: {
-          every: {
-            id: orderId,
-          },
+        orderId: orderId,
+      },
+      data: {
+        productStatusId: {
+          set: 'clb3fhehx0000tk74rm7oibs7', //available
         },
       },
-      select: {
-        id: true,
-      },
     });
-    this.changeProductStatus(
-      products.map((item) => item.id),
-      'clb3fhehx0000tk74rm7oibs7',
-    ); //available
-
     return this.prisma.order.update({
       where: {
         id: orderId,
@@ -370,5 +440,71 @@ export class OrderService {
       return now > estimatedEnd;
     });
     return exceded;
+  }
+
+  createStatus(status: { name: string }) {
+    return this.prisma.orderStatus.create({
+      data: {
+        name: status.name,
+      },
+    });
+  }
+  updateStatus(id: string, status: { name: string }) {
+    return this.prisma.orderStatus.update({
+      where: {
+        id,
+      },
+      data: {
+        name: status.name,
+      },
+    });
+  }
+  deleteStatus(id: string) {
+    return this.prisma.orderStatus.delete({
+      where: {
+        id,
+      },
+    });
+  }
+  async findStatuses() {
+    return this.prisma.orderStatus.findMany();
+  }
+
+  count() {
+    return this.prisma.order.count({
+      where: {
+        createdAt: {
+          gte: new Date(
+            new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000).setHours(
+              0,
+              0,
+              0,
+              0,
+            ),
+          ),
+        },
+      },
+    });
+  }
+
+  async revenue() {
+    const res = await this.prisma.order.aggregate({
+      where: {
+        createdAt: {
+          gte: new Date(
+            new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000).setHours(
+              0,
+              0,
+              0,
+              0,
+            ),
+          ),
+        },
+      },
+      _sum: {
+        price: true,
+      },
+    });
+    return res._sum.price;
   }
 }

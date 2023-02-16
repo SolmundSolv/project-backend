@@ -42,17 +42,29 @@ model Product {
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 
-  serialNumer        String         @default("XXXX-XXXX-XXXX-XXXX")
-  boughtAt           DateTime       @default(now())
+  serialNumer        String           @default("XXXX-XXXX-XXXX-XXXX")
+  boughtAt           DateTime         @default(now())
   warrantyExpiration DateTime?
   warranty           String?
-  ProductStatus      ProductStatus? @relation(fields: [productStatusId], references: [id], onUpdate: Cascade)
+  ProductStatus      ProductStatus?   @relation(fields: [productStatusId], references: [id], onUpdate: Cascade)
   productStatusId    String?
-  CartItem           CartItem[]
-  Model              Model?         @relation(fields: [modelId], references: [id])
+  Model              Model?           @relation(fields: [modelId], references: [id])
   modelId            String?
-  Order              Order[]
   Maintenance        Maintenance[]
+  Order              Order?           @relation(fields: [orderId], references: [id])
+  orderId            String?
+  ProductHistory     ProductHistory[]
+}
+
+model ProductHistory {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+  Order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   String?
 }
 
 model Maintenance {
@@ -62,17 +74,31 @@ model Maintenance {
 
   description         String
   price               Decimal
-  estimatedTime       DateTime
-  Product             Product?           @relation(fields: [productId], references: [id])
+  start               DateTime?
+  estimatedTime       Int                  @default(0)
+  Product             Product?             @relation(fields: [productId], references: [id])
   productId           String?
-  maintenanceStatus   MaintenanceStatus? @relation(fields: [maintenanceStatusId], references: [id], onUpdate: Cascade)
+  maintenanceStatus   MaintenanceStatus?   @relation(fields: [maintenanceStatusId], references: [id], onUpdate: Cascade)
   maintenanceStatusId String?
+  MaintenanceDetails  MaintenanceDetails[]
+}
+
+model MaintenanceDetails {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  description   String
+  price         Decimal
+  Maintenance   Maintenance? @relation(fields: [maintenanceId], references: [id])
+  maintenanceId String?
 }
 
 model MaintenanceStatus {
-  id           String        @id @default(cuid())
-  name         String        @unique
-  maintenances Maintenance[]
+  id              String        @id @default(cuid())
+  name            String        @unique
+  visibleOnCreate Boolean       @default(true)
+  maintenances    Maintenance[]
 }
 
 model ProductStatus {
@@ -82,16 +108,26 @@ model ProductStatus {
 }
 
 model Model {
-  id          String      @id @default(cuid())
-  name        String      @default("Product")
-  price       Decimal     @default(0)
-  img         String      @default("")
-  description String      @default("Descripton")
-  categoryId  String?
-  isActive    Boolean     @default(true)
-  category    Category?   @relation(fields: [categoryId], references: [id])
-  Analytics   Analytics[]
-  Products    Product[]
+  id           String         @id @default(cuid())
+  name         String         @default("Product")
+  price        Int            @default(0)
+  img          String         @default("")
+  description  String         @default("Descripton")
+  categoryId   String?
+  isActive     Boolean        @default(true)
+  category     Category?      @relation(fields: [categoryId], references: [id])
+  Analytics    Analytics[]
+  Products     Product[]
+  ModelDetails ModelDetails[]
+  CartItem     CartItem[]
+}
+
+model ModelDetails {
+  id      String  @id @default(cuid())
+  name    String
+  value   String
+  Model   Model?  @relation(fields: [modelId], references: [id])
+  modelId String?
 }
 
 model Category {
@@ -102,18 +138,19 @@ model Category {
 }
 
 model Order {
-  id           String      @id @default(cuid())
-  number       Int         @unique
-  contractorId String
-  statusId     String
-  price        Decimal
-  createdAt    DateTime    @default(now())
-  rentStart    DateTime?
-  rentEnd      DateTime?
-  rentDays     Int         @default(0)
-  status       OrderStatus @relation(fields: [statusId], references: [id])
-  customer     Customer    @relation(fields: [contractorId], references: [id])
-  products     Product[]
+  id             String           @id @default(cuid())
+  number         Int              @unique
+  contractorId   String
+  statusId       String
+  price          Decimal
+  createdAt      DateTime         @default(now())
+  rentStart      DateTime?
+  rentEnd        DateTime?
+  rentDays       Int              @default(0)
+  status         OrderStatus      @relation(fields: [statusId], references: [id])
+  customer       Customer         @relation(fields: [contractorId], references: [id])
+  products       Product[]
+  ProductHistory ProductHistory[]
 }
 
 model OrderStatus {
@@ -171,9 +208,9 @@ model CartItem {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   cartId    String
-  cart      Cart     @relation(fields: [cartId], references: [id])
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Model    @relation(fields: [productId], references: [id])
   Invoice   Invoice? @relation(fields: [invoiceId], references: [id])
   invoiceId String?
 }
@@ -206,27 +243,31 @@ model Settings {
 }
 
 model Email {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  email     String
-  name      String
-  subject   String
-  message   String
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  email           String
+  message         String
+  EmailTemplate   EmailTemplate? @relation(fields: [emailTemplateId], references: [id])
+  emailTemplateId String?
 }
 
 model EmailTemplate {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  name      String
-  subject   String
-  message   String
+  id                     String                  @id @default(cuid())
+  createdAt              DateTime                @default(now())
+  name                   String
+  subject                String
+  message                String
+  Emails                 Email[]
+  EmailTemplateVariables EmailTemplateVariable[]
 }
 
 model EmailTemplateVariable {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  name      String
-  value     String
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  name            String
+  value           String
+  EmailTemplate   EmailTemplate? @relation(fields: [emailTemplateId], references: [id])
+  emailTemplateId String?
 }
 
 model EmailTemplateVariableType {
@@ -253,30 +294,28 @@ model KanbanColumn {
 }
 
 model KanbanTask {
-  id                                String                              @id @default(cuid())
-  createdAt                         DateTime                            @default(now())
-  name                              String
-  columnId                          String
-  column                            KanbanColumn                        @relation(fields: [columnId], references: [id])
-  KanbanTaskComment                 KanbanTaskComment[]
-  KanbanTaskAttachment              KanbanTaskAttachment[]
-  KanbanTaskLabel                   KanbanTaskLabel[]
-  KanbanTaskChecklist               KanbanTaskChecklist[]
-  KanbanTaskChecklistItem           KanbanTaskChecklistItem[]
-  KanbanTaskChecklistItemComment    KanbanTaskChecklistItemComment[]
-  KanbanTaskChecklistItemAttachment KanbanTaskChecklistItemAttachment[]
-  KanbanTaskChecklistItemLabel      KanbanTaskChecklistItemLabel[]
-  KanbanTaskCommentAttachment       KanbanTaskCommentAttachment[]
-  KanbanTaskCommentLabel            KanbanTaskCommentLabel[]
-  KanbanTaskAttachmentLabel         KanbanTaskAttachmentLabel[]
+  id                        String                      @id @default(cuid())
+  createdAt                 DateTime                    @default(now())
+  name                      String
+  columnId                  String
+  column                    KanbanColumn                @relation(fields: [columnId], references: [id])
+  KanbanTaskComment         KanbanTaskComment[]
+  KanbanTaskAttachment      KanbanTaskAttachment[]
+  KanbanTaskLabel           KanbanTaskLabel[]
+  KanbanTaskChecklist       KanbanTaskChecklist[]
+  KanbanTaskAttachmentLabel KanbanTaskAttachmentLabel[]
 }
 
 model KanbanTaskComment {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  name      String
-  taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  id                          String                        @id @default(cuid())
+  createdAt                   DateTime                      @default(now())
+  name                        String
+  Employee                    Employee?                     @relation(fields: [employeeId], references: [id])
+  employeeId                  String?
+  taskId                      String
+  task                        KanbanTask                    @relation(fields: [taskId], references: [id])
+  KanbanTaskCommentAttachment KanbanTaskCommentAttachment[]
+  KanbanTaskCommentLabel      KanbanTaskCommentLabel[]
 }
 
 model KanbanTaskAttachment {
@@ -296,59 +335,64 @@ model KanbanTaskLabel {
 }
 
 model KanbanTaskChecklist {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  name      String
-  taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  id                      String                    @id @default(cuid())
+  createdAt               DateTime                  @default(now())
+  name                    String
+  taskId                  String
+  task                    KanbanTask                @relation(fields: [taskId], references: [id])
+  KanbanTaskChecklistItem KanbanTaskChecklistItem[]
 }
 
 model KanbanTaskChecklistItem {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  name      String
-  taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  id                                String                              @id @default(cuid())
+  createdAt                         DateTime                            @default(now())
+  name                              String
+  checked                           Boolean                             @default(false)
+  taskId                            String
+  task                              KanbanTaskChecklist                 @relation(fields: [taskId], references: [id])
+  KanbanTaskChecklistItemComment    KanbanTaskChecklistItemComment[]
+  KanbanTaskChecklistItemAttachment KanbanTaskChecklistItemAttachment[]
+  KanbanTaskChecklistItemLabel      KanbanTaskChecklistItemLabel[]
 }
 
 model KanbanTaskChecklistItemComment {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
+  id        String                  @id @default(cuid())
+  createdAt DateTime                @default(now())
   name      String
   taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  task      KanbanTaskChecklistItem @relation(fields: [taskId], references: [id])
 }
 
 model KanbanTaskChecklistItemAttachment {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
+  id        String                  @id @default(cuid())
+  createdAt DateTime                @default(now())
   name      String
   taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  task      KanbanTaskChecklistItem @relation(fields: [taskId], references: [id])
 }
 
 model KanbanTaskChecklistItemLabel {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
+  id        String                  @id @default(cuid())
+  createdAt DateTime                @default(now())
   name      String
   taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  task      KanbanTaskChecklistItem @relation(fields: [taskId], references: [id])
 }
 
 model KanbanTaskCommentAttachment {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
+  id        String            @id @default(cuid())
+  createdAt DateTime          @default(now())
   name      String
   taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  task      KanbanTaskComment @relation(fields: [taskId], references: [id])
 }
 
 model KanbanTaskCommentLabel {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
+  id        String            @id @default(cuid())
+  createdAt DateTime          @default(now())
   name      String
   taskId    String
-  task      KanbanTask @relation(fields: [taskId], references: [id])
+  task      KanbanTaskComment @relation(fields: [taskId], references: [id])
 }
 
 model KanbanTaskAttachmentLabel {
@@ -360,29 +404,30 @@ model KanbanTaskAttachmentLabel {
 }
 
 model Employee {
-  id              String            @id @default(cuid())
-  createdAt       DateTime          @default(now())
-  name            String
-  email           String
-  phone           String
-  address         String
-  city            String
-  zip             String
-  country         String
-  status          String
-  role            EmployeeRole      @relation(fields: [roleId], references: [id])
-  roleId          String
-  avatar          String?
-  password        String?
-  token           String?
-  lastLogin       DateTime?
-  Position        Position?         @relation(fields: [positionId], references: [id])
-  positionId      String?
-  Salary          Salary?           @relation(fields: [salaryId], references: [id])
-  salaryId        String?
-  bonus           String?
-  AbsenceTracking AbsenceTracking[]
-  TimeOffRequest  TimeOffRequest[]
+  id                String              @id @default(cuid())
+  createdAt         DateTime            @default(now())
+  name              String
+  email             String
+  phone             String
+  address           String
+  city              String
+  zip               String
+  country           String
+  status            String
+  role              EmployeeRole        @relation(fields: [roleId], references: [id])
+  roleId            String
+  avatar            String?
+  password          String?
+  token             String?
+  lastLogin         DateTime?
+  Position          Position?           @relation(fields: [positionId], references: [id])
+  positionId        String?
+  Salary            Salary?             @relation(fields: [salaryId], references: [id])
+  salaryId          String?
+  bonus             String?
+  AbsenceTracking   AbsenceTracking[]
+  TimeOffRequest    TimeOffRequest[]
+  KanbanTaskComment KanbanTaskComment[]
 }
 
 model EmployeeRole {
@@ -435,4 +480,45 @@ model AbsenceTracking {
   Employee   Employee @relation(fields: [employeeId], references: [id])
   employeeId String
   date       DateTime
+}
+
+model PageType {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  Page      Page[]
+}
+
+model Page {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  name       String
+  PageType   PageType @relation(fields: [pageTypeId], references: [id])
+  pageTypeId String
+  href       String
+  title      String
+}
+
+model Links {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  href      String
+}
+
+model Navigation {
+  id               String          @id @default(cuid())
+  createdAt        DateTime        @default(now())
+  name             String
+  href             String
+  iconPath         String
+  NavigationType   NavigationType? @relation(fields: [navigationTypeId], references: [id])
+  navigationTypeId String?
+}
+
+model NavigationType {
+  id         String       @id @default(cuid())
+  createdAt  DateTime     @default(now())
+  name       String
+  Navigation Navigation[]
 }

@@ -24,11 +24,30 @@ export class EmailController {
     return this.emailService.findAllTemplates();
   }
   @Post('send')
-  sendEmail(@Body() data: { email: string; template: string; variables: any }) {
+  sendEmailWithTemplate(
+    @Body() data: { email: string; template: string; variables: any },
+  ) {
     return this.emailService.sendEmailWithTemplate(
       data.email,
       data.template,
       data.variables,
+    );
+  }
+  @Post('contact')
+  sendEmailWithContact(
+    @Body()
+    data: {
+      email: string;
+      name: string;
+      subject: string;
+      message: string;
+    },
+  ) {
+    return this.emailService.sendContactEmail(
+      data.email,
+      data.message,
+      data.name,
+      data.subject,
     );
   }
 

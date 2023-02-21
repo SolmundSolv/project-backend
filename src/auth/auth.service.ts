@@ -37,6 +37,24 @@ export class AuthService {
           },
         },
       });
+      const createCustomer = await this.prisma.customer.create({
+        data: {
+          name: user.name,
+          User: {
+            connect: {
+              id: newUser.id,
+            },
+          },
+          adress: {
+            create: {
+              street: '',
+              city: '',
+              zip: '',
+              building: '',
+            },
+          },
+        },
+      });
 
       return this.signToken(
         newUser.id,

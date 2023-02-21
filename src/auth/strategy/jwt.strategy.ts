@@ -23,6 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     name: string;
     role: string;
   }) {
+    let isEmployee = true;
     const user = await this.prisma.user.findUnique({
       where: {
         id: payload.sub,
@@ -48,6 +49,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       },
     });
 
-    return { ...user, ...customer };
+    try {
+      const employee = await this.prisma.employee.findFirstOrThrow({
+        where: {
+          userId: user.id,
+        },
+      });
+    } catch (error) {
+      isEmployee = false;
+    }
+
+    return { ...user, ...customer, isEmployee };
   }
 }

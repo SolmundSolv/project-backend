@@ -78,7 +78,7 @@ export class EmployeeService {
     });
   }
 
-  async findTimeOffRequestById(employeeId: string, timeOffRequestId: string) {
+  async findTimeOffRequestById(timeOffRequestId: string) {
     return await this.prisma.timeOffRequest.findUnique({
       where: {
         id: timeOffRequestId,
@@ -132,17 +132,29 @@ export class EmployeeService {
     return await this.prisma.employee.findMany({
       include: {
         role: true,
+        Position: true,
       },
     });
   }
 
   async findOne(id: string) {
-    return await this.prisma.employee.findUnique({
+    return await this.prisma.employee.findFirst({
       where: {
-        id: id,
+        User: {
+          id: id,
+        },
       },
       include: {
         role: true,
+        Position: true,
+        Salary: {
+          include: {
+            Currency: true,
+            SalaryStatus: true,
+          },
+        },
+        TimeOffRequest: true,
+        KanbanTask: true,
       },
     });
   }

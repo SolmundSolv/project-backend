@@ -350,7 +350,8 @@ export class ProductService {
         price: true,
       },
     });
-    return res._sum.price;
+    console.log(res._sum.price);
+    return res._sum.price ?? 0;
   }
 
   updateEquipment(id: string, data: any) {
@@ -365,6 +366,20 @@ export class ProductService {
             name: data.status,
           },
         },
+      },
+    });
+  }
+  historyOfProduct(id: string) {
+    return this.prisma.productHistory.findMany({
+      where: {
+        productId: id,
+      },
+      include: {
+        Product: true,
+        Order: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }

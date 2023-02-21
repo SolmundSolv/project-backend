@@ -45,6 +45,11 @@ export class ProductController {
     return this.productService.deleteStatus(id);
   }
 
+  @Get('history/:id')
+  history(@Param('id') id: string) {
+    return this.productService.historyOfProduct(id);
+  }
+
   @Get('maintenance')
   maintence() {
     return this.productService.allMaintance();

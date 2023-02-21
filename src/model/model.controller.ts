@@ -25,6 +25,10 @@ export class ProductController {
   findAll() {
     return this.productService.findAll();
   }
+  @Get('random')
+  random() {
+    return this.productService.get5Random();
+  }
 
   @Get('category/:id')
   byCategory(@Param('id') id: string) {

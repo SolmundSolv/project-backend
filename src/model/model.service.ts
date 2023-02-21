@@ -63,8 +63,6 @@ export class ProductService {
         },
       },
     });
-    //add available quantity to response
-    console.log({ ...res, availableQuantity });
     return { ...res, availableQuantity };
   }
 
@@ -139,6 +137,18 @@ export class ProductService {
 
   async category() {
     const res = await this.prisma.category.findMany();
+    return res;
+  }
+  async get5Random() {
+    const res = await this.prisma.model.findMany({
+      include: {
+        category: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 5,
+    });
     return res;
   }
 }

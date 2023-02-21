@@ -48,6 +48,11 @@ export class OrderController {
     return this.orderService.findInProgress();
   }
 
+  @Get('user/:id')
+  findUserOrders(@Param('id') id: string) {
+    return this.orderService.findOrdersByUser(id);
+  }
+
   @Get('waiting')
   findWaiting() {
     return this.orderService.findWaiting();

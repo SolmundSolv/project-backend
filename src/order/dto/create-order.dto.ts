@@ -1,12 +1,13 @@
 import {
   IsArray,
-  isNotEmpty,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
 export class CreateOrderDto {
+  @IsOptional()
   readonly customer: string;
   @IsNotEmpty()
   readonly name: string;
@@ -25,6 +26,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   readonly country: string;
 
+  @IsString()
   readonly cartId: string;
 
   @IsNotEmpty()

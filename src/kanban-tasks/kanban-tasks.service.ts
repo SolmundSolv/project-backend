@@ -152,9 +152,6 @@ export class KanbanTasksService {
     });
   }
 
-  create(createKanbanTaskDto: CreateKanbanTaskDto) {
-    return 'This action adds a new kanbanTask';
-  }
   async findAllBoard(boardId: string) {
     return await this.prisma.kanbanColumn.findMany({
       where: {
@@ -195,6 +192,11 @@ export class KanbanTasksService {
             KanbanTaskCommentAttachment: true,
           },
         },
+        Employee: {
+          include: {
+            role: true,
+          },
+        },
       },
     });
   }
@@ -207,6 +209,7 @@ export class KanbanTasksService {
       include: {
         KanbanTaskCommentLabel: true,
         KanbanTaskCommentAttachment: true,
+        Employee: true,
       },
     });
   }
@@ -215,14 +218,27 @@ export class KanbanTasksService {
     label: string,
     description: string,
     taskId: string,
+    employeeId: string,
   ) {
-    console.log(label, description, taskId);
+    const employee = await this.prisma.employee.findFirst({
+      where: {
+        User: {
+          id: employeeId,
+        },
+      },
+    });
+
     return await this.prisma.kanbanTaskComment.create({
       data: {
         name: label,
         KanbanTaskCommentLabel: {
           create: {
             name: label,
+          },
+        },
+        Employee: {
+          connect: {
+            id: employee.id,
           },
         },
         KanbanTaskCommentAttachment: {
@@ -239,6 +255,22 @@ export class KanbanTasksService {
       include: {
         KanbanTaskCommentLabel: true,
         KanbanTaskCommentAttachment: true,
+        Employee: true,
+      },
+    });
+  }
+
+  async addEmployeeToTask(employeeId: string, taskId: string) {
+    return await this.prisma.kanbanTask.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        Employee: {
+          connect: {
+            id: employeeId,
+          },
+        },
       },
     });
   }

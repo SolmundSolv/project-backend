@@ -33,8 +33,14 @@ export class KanbanTasksController {
     @Param('taskId') taskId: string,
     @Body('label') label: string,
     @Body('content') content: string,
+    @Body('employeeId') employeeId: string,
   ) {
-    return this.kanbanTasksService.createCommentInTask(label, content, taskId);
+    return this.kanbanTasksService.createCommentInTask(
+      label,
+      content,
+      taskId,
+      employeeId,
+    );
   }
 
   @Post(':boardId/:columnId')
@@ -65,5 +71,13 @@ export class KanbanTasksController {
   @Get('comments/:taskId')
   findComments(@Param('taskId') taskId: string) {
     return this.kanbanTasksService.findAllCommentsInTask(taskId);
+  }
+
+  @Post(':taskId/add/:userId')
+  addEmployeeToTask(
+    @Param('taskId') taskId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.kanbanTasksService.addEmployeeToTask(userId, taskId);
   }
 }

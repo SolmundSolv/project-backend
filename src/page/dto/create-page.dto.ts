@@ -5,8 +5,7 @@ export class CreatePageDto {
   name: string;
   @IsString()
   title: string;
-  @IsString()
-  status: string;
+
   @IsString()
   type: string;
   @IsString()

@@ -177,6 +177,37 @@ export class EmailService {
     });
   }
 
+  async sendContactEmail(
+    email: string,
+    message: string,
+    name: string,
+    subject: string,
+  ) {
+    const mailOptions = {
+      from: email,
+      to: 'konradqxd@gmail.com',
+      subject: subject + ' - ' + name + ' - ' + email,
+      html: message,
+    };
+    this.mail.sendMail(mailOptions).then((res) => {
+      if (res.error) {
+        return res.error;
+      } else {
+        return this.prisma.email.create({
+          data: {
+            email: email,
+            message: message,
+            EmailTemplate: {
+              connect: {
+                id: 'cleekyb8j0000tk9k8bdtb8jv',
+              },
+            },
+          },
+        });
+      }
+    });
+  }
+
   async findAllTemplates() {
     return await this.prisma.emailTemplate.findMany({
       select: {

@@ -11,22 +11,41 @@ export class CartService {
       data: {},
     });
   }
-  findOne(id: string) {
-    return this.prisma.cart.findUnique({
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({
       where: {
         id: id,
       },
+      select: {
+        id: true,
+      },
+    });
+
+    const cart = await this.prisma.cart.findUnique({
+      where: {
+        userId: user.id,
+      },
       include: {
         CartItem: {
-          where: {
-            cartId: id,
-          },
           include: {
             product: true,
           },
         },
       },
     });
+
+    if (!cart) {
+      return await this.prisma.cart.create({
+        data: {
+          User: {
+            connect: {
+              id: user.id,
+            },
+          },
+        },
+      });
+    }
+    return cart;
   }
   async addProductToCart(cartId: string, productId: string) {
     //check if product is already in cart

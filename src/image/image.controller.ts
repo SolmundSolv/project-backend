@@ -7,11 +7,15 @@ import {
   Param,
   Delete,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ImageService } from './image.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { Observable, of } from 'rxjs';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Controller('image')
 export class ImageController {
@@ -22,6 +26,21 @@ export class ImageController {
     return this.imageService.create(createImageDto);
   }
 
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('media', {
+      storage: diskStorage({
+        destination: './src/img',
+        filename: (req, file, cb) => {
+          const filename: string = file.originalname;
+          cb(null, `${filename}`);
+        },
+      }),
+    }),
+  )
+  uploadFile(@UploadedFile() file): Observable<Object> {
+    return file;
+  }
   @Get()
   findAll() {
     return this.imageService.findAll();

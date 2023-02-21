@@ -12,8 +12,8 @@ export class OrderService {
   constructor(private prisma: PrismaService) {}
   //done and working
   async create(createOrderDto: CreateOrderDto) {
+    console.log('order: ', createOrderDto);
     let customer = createOrderDto.customer;
-    console.log(createOrderDto);
     if (!createOrderDto.customer) {
       const res = await this.prisma.customer.create({
         data: {
@@ -91,8 +91,9 @@ export class OrderService {
         customer: true,
       },
     });
+    console.log('Delete cart', createOrderDto.cartId);
 
-    this.prisma.cart.delete({
+    await this.prisma.cart.delete({
       where: {
         id: createOrderDto.cartId,
       },
@@ -170,6 +171,19 @@ export class OrderService {
               Model: {
                 include: {
                   category: true,
+                },
+              },
+            },
+          },
+          ProductHistory: {
+            include: {
+              Product: {
+                include: {
+                  Model: {
+                    include: {
+                      category: true,
+                    },
+                  },
                 },
               },
             },
@@ -505,6 +519,33 @@ export class OrderService {
         price: true,
       },
     });
-    return res._sum.price;
+    return res._sum.price ?? 0;
+  }
+
+  async findOrdersByUser(userId: string) {
+    const customerId = await this.prisma.customer.findFirst({
+      where: {
+        userId: userId,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!customerId) {
+      return [];
+    }
+    return this.prisma.order.findMany({
+      where: {
+        customer: {
+          id: customerId.id,
+        },
+      },
+      include: {
+        status: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 }

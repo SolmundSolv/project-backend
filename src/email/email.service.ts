@@ -51,6 +51,7 @@ export class EmailService {
     //add variables from subject to variables
 
     const subjectVariables = this.retriveVariables(subject);
+
     subjectVariables.forEach((variable) => {
       if (!variables.includes(variable)) {
         variables.push(variable);

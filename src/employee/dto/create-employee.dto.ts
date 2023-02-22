@@ -11,10 +11,6 @@ export class CreateEmployeeDto {
   @IsNotEmpty()
   name: string;
 
-  @IsString()
-  @IsNotEmpty()
-  surname: string;
-
   @IsEmail()
   @IsNotEmpty()
   email: string;

@@ -10,6 +10,7 @@ import {
 import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { CreateTimeoffrequestDto } from './dto/create-timeoffrequest.dto';
 
 @Controller('employee')
 export class EmployeeController {
@@ -18,6 +19,37 @@ export class EmployeeController {
   @Post()
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeeService.create(createEmployeeDto);
+  }
+
+  @Post('timeoffrequest/procied')
+  prociedTimeOffRequest(@Body() data: { id: string; status: string }) {
+    return this.employeeService.updateTimeOffRequest(data.id, data.status);
+  }
+
+  @Post('timeoffrequest')
+  createTimeOffRequest(
+    @Body()
+    data: CreateTimeoffrequestDto,
+  ) {
+    return this.employeeService.createTimeOffRequest(
+      data.employeeId,
+      data.startDate,
+      data.endDate,
+      data.reason,
+    );
+  }
+  @Get('timeoffrequest')
+  getTimeOffRequest(@Body() data: { id: string }) {
+    return this.employeeService.findTimeOffRequests(data.id);
+  }
+
+  @Get('roles')
+  getRoles() {
+    return this.employeeService.findRoles();
+  }
+  @Post('change-role')
+  changeRole(@Body() data: { id: string; roleId: string }) {
+    return this.employeeService.changeRole(data.id, data.roleId);
   }
 
   @Get()

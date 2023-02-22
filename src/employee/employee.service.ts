@@ -56,6 +56,15 @@ export class EmployeeService {
     endDate: Date,
     reason: string,
   ) {
+    const employee = await this.prisma.employee.findFirst({
+      where: {
+        userId: employeeId,
+      },
+    });
+    if (employee) {
+      employeeId = employee.id;
+    }
+
     return await this.prisma.timeOffRequest.create({
       data: {
         start: startDate,
@@ -66,14 +75,48 @@ export class EmployeeService {
             id: employeeId,
           },
         },
+        RequestStatus: {
+          connect: {
+            id: 'clefonc2p0000tkp44ynm62hn',
+          },
+        },
       },
     });
   }
 
   async findTimeOffRequests(employeeId: string) {
+    const employee = await this.prisma.employee.findFirst({
+      where: {
+        userId: employeeId,
+      },
+    });
+    if (employee) {
+      employeeId = employee.id;
+    }
+
     return await this.prisma.timeOffRequest.findMany({
       where: {
         employeeId: employeeId,
+      },
+    });
+  }
+
+  async updateTimeOffRequest(timeOffRequestId: string, status: string) {
+    const name = await this.prisma.requestStatus.findFirst({
+      where: {
+        name: status,
+      },
+    });
+    return await this.prisma.timeOffRequest.update({
+      where: {
+        id: timeOffRequestId,
+      },
+      data: {
+        RequestStatus: {
+          connect: {
+            id: name.id,
+          },
+        },
       },
     });
   }
@@ -138,11 +181,9 @@ export class EmployeeService {
   }
 
   async findOne(id: string) {
-    return await this.prisma.employee.findFirst({
+    const byid = await this.prisma.employee.findFirst({
       where: {
-        User: {
-          id: id,
-        },
+        id: id,
       },
       include: {
         role: true,
@@ -153,10 +194,37 @@ export class EmployeeService {
             SalaryStatus: true,
           },
         },
-        TimeOffRequest: true,
+        TimeOffRequest: {
+          include: {
+            RequestStatus: true,
+          },
+        },
         KanbanTask: true,
       },
     });
+    if (byid) {
+      return byid;
+    } else {
+      return await this.prisma.employee.findFirst({
+        where: {
+          User: {
+            id: id,
+          },
+        },
+        include: {
+          role: true,
+          Position: true,
+          Salary: {
+            include: {
+              Currency: true,
+              SalaryStatus: true,
+            },
+          },
+          TimeOffRequest: true,
+          KanbanTask: true,
+        },
+      });
+    }
   }
 
   update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
@@ -170,6 +238,20 @@ export class EmployeeService {
       },
       data: {
         status: 'INACTIVE',
+      },
+    });
+  }
+  async changeRole(id: string, roleId: string) {
+    return this.prisma.employee.update({
+      where: {
+        id: id,
+      },
+      data: {
+        role: {
+          connect: {
+            id: roleId,
+          },
+        },
       },
     });
   }

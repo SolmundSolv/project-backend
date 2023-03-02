@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   Put,
   Req,
   UseGuards,
@@ -24,5 +25,14 @@ export class UserController {
   @Put(':id')
   async updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
     return this.UserService.update(id, data);
+  }
+
+  @Get()
+  async getAllUsers() {
+    return this.UserService.findAll();
+  }
+  @Post(':id/link')
+  async linkUser(@Param('id') employeeId: string, @Body('id') userId: string) {
+    return this.UserService.link(employeeId, userId);
   }
 }

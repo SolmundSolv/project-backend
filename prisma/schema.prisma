@@ -149,6 +149,7 @@ model Order {
   createdAt      DateTime         @default(now())
   rentStart      DateTime?
   rentEnd        DateTime?
+  payment        Payment?
   rentDays       Int              @default(0)
   status         OrderStatus      @relation(fields: [statusId], references: [id])
   customer       Customer         @relation(fields: [contractorId], references: [id])
@@ -216,28 +217,24 @@ model CartItem {
   cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
   product   Model    @relation(fields: [productId], references: [id])
-  Invoice   Invoice? @relation(fields: [invoiceId], references: [id])
-  invoiceId String?
-}
-
-model Invoice {
-  id        String     @id @default(cuid())
-  createdAt DateTime   @default(now())
-  number    Int        @unique
-  price     Decimal
-  status    String
-  CartItem  CartItem[]
-  Payment   Payment[]
 }
 
 model Payment {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-  number    Int      @unique
   price     Decimal
-  status    String
-  Invoice   Invoice? @relation(fields: [invoiceId], references: [id])
-  invoiceId String?
+
+  Order           Order          @relation(fields: [orderId], references: [id])
+  orderId         String         @unique
+  PaymentStatus   PaymentStatus? @relation(fields: [paymentStatusId], references: [id])
+  paymentStatusId String?
+}
+
+model PaymentStatus {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  payments  Payment[]
 }
 
 model Settings {
@@ -565,6 +562,7 @@ model PageSection {
   createdAt DateTime @default(now())
   name      String
   value     String
+  iconPath  String?
   Page      Page     @relation(fields: [pageId], references: [id])
   pageId    String
 }

@@ -6,12 +6,13 @@ import { UpdateCartDto } from './dto/update-cart.dto';
 @Injectable()
 export class CartService {
   constructor(private prisma: PrismaService) {}
-  create(createCartDto: CreateCartDto) {
+  create() {
     return this.prisma.cart.create({
       data: {},
     });
   }
   async findOne(id: string) {
+    let cart;
     const user = await this.prisma.user.findUnique({
       where: {
         id: id,
@@ -20,20 +21,33 @@ export class CartService {
         id: true,
       },
     });
-
-    const cart = await this.prisma.cart.findUnique({
-      where: {
-        userId: user.id,
-      },
-      include: {
-        CartItem: {
-          include: {
-            product: true,
+    if (!user) {
+      cart = await this.prisma.cart.findUnique({
+        where: {
+          id: id,
+        },
+        include: {
+          CartItem: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
-
+      });
+    } else {
+      cart = await this.prisma.cart.findUnique({
+        where: {
+          userId: user.id,
+        },
+        include: {
+          CartItem: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+    }
     if (!cart) {
       return await this.prisma.cart.create({
         data: {
@@ -48,6 +62,19 @@ export class CartService {
     return cart;
   }
   async addProductToCart(cartId: string, productId: string) {
+    //check if cart exists
+    const cart = await this.prisma.cart.findUnique({
+      where: {
+        id: cartId,
+      },
+    });
+    if (!cart) {
+      await this.prisma.cart.create({
+        data: {
+          id: cartId,
+        },
+      });
+    }
     //check if product is already in cart
     const check = await this.prisma.cartItem.findFirst({
       where: {
@@ -88,6 +115,7 @@ export class CartService {
         id: true,
       },
     });
+    console.log(id);
     if (!id) {
       throw new ForbiddenException('Product not in cart');
     }

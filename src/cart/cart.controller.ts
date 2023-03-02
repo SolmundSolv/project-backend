@@ -17,8 +17,8 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.create(createCartDto);
+  create() {
+    return this.cartService.create();
   }
 
   @Get(':id')

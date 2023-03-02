@@ -61,4 +61,28 @@ export class UserService {
       },
     });
   }
+
+  async findAll() {
+    return await this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+  }
+  async link(employeeId: string, userId: string) {
+    return await this.prisma.employee.update({
+      where: {
+        id: employeeId,
+      },
+      data: {
+        User: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
+    });
+  }
 }

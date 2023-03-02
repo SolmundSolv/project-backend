@@ -14,7 +14,6 @@ export class AuthService {
     private config: ConfigService,
   ) {}
   async signup(user: AuthDto) {
-    console.log(user);
     //generate salt to hash password
     const hash = await argon.hash(user.password);
     //create user
@@ -56,12 +55,13 @@ export class AuthService {
         },
       });
 
-      return this.signToken(
+      const token = await this.signToken(
         newUser.id,
         newUser.email,
         newUser.name,
         newUser.role?.name,
       );
+      return token;
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === 'P2002') {
@@ -106,12 +106,13 @@ export class AuthService {
     //generate token
     //return status 200 and token
 
-    return this.signToken(
+    const token = await this.signToken(
       foundUser.id,
       foundUser.email,
       foundUser.name,
       foundUser.role?.name,
     );
+    return token;
   }
 
   async signToken(
@@ -138,6 +139,7 @@ export class AuthService {
         expires: new Date(Date.now() + 86400000),
       },
     });
+    console.log(token);
     return { access_token: token };
   }
 
@@ -154,5 +156,30 @@ export class AuthService {
         sessionToken: token,
       },
     });
+  }
+
+  async checkPassword(password: string, userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) throw new ForbiddenException('User not found');
+    const isValid = await argon.verify(user.password, password);
+    if (!isValid) throw new ForbiddenException('Invalid password');
+    return user;
+  }
+  async changePassword(password: string, id: string) {
+    const hash = await argon.hash(password);
+
+    const user = await this.prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        password: hash,
+      },
+    });
+    return user;
   }
 }

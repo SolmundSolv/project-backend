@@ -127,4 +127,8 @@ export class OrderController {
   cancelOrder(@Param('id') id: string) {
     return this.orderService.cancelOrder(id);
   }
+  @Post('raport')
+  raport(@Body() raport: { startDate: string; endDate: string }) {
+    return this.orderService.orderRaport(raport.startDate, raport.endDate);
+  }
 }

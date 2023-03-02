@@ -12,6 +12,7 @@ async function bootstrap() {
   };
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'debug', 'log', 'verbose'],
+    rawBody: true,
   });
   app.enableCors();
   app.useGlobalPipes(

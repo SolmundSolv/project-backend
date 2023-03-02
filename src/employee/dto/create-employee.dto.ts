@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsPhoneNumber,
   IsString,
   IsUrl,
@@ -36,14 +37,14 @@ export class CreateEmployeeDto {
   country: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   roleId: string;
 
   @IsString()
-  @IsUrl()
+  @IsOptional()
   avatar: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   status: string;
 }

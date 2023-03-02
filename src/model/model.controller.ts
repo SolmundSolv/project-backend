@@ -27,7 +27,7 @@ export class ProductController {
   }
   @Get('random')
   random() {
-    return this.productService.get5Random();
+    return this.productService.get5Last();
   }
 
   @Get('category/:id')
@@ -57,5 +57,10 @@ export class ProductController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productService.remove(id);
+  }
+
+  @Post('raport')
+  raport(@Body() raport: { startDate: string; endDate: string }) {
+    return this.productService.productRaport(raport.startDate, raport.endDate);
   }
 }

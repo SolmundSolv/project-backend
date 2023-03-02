@@ -47,6 +47,18 @@ export class EmployeeController {
   getRoles() {
     return this.employeeService.findRoles();
   }
+  @Post('roles')
+  createRole(@Body() data: { name: string }) {
+    return this.employeeService.createRole(data.name);
+  }
+  @Patch('roles/:id')
+  updateRole(@Param('id') id: string, @Body() data: { name: string }) {
+    return this.employeeService.updateRole(id, data.name);
+  }
+  @Delete('roles/:id')
+  deleteRole(@Param('id') id: string) {
+    return this.employeeService.deleteRole(id);
+  }
   @Post('change-role')
   changeRole(@Body() data: { id: string; roleId: string }) {
     return this.employeeService.changeRole(data.id, data.roleId);
@@ -66,7 +78,9 @@ export class EmployeeController {
   update(
     @Param('id') id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
-  ) {}
+  ) {
+    return this.employeeService.update(id, updateEmployeeDto);
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

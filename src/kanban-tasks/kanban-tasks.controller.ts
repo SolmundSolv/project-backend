@@ -73,6 +73,13 @@ export class KanbanTasksController {
     return this.kanbanTasksService.findAllCommentsInTask(taskId);
   }
 
+  @Patch('checklist/:id')
+  updateChecklistItem(
+    @Param('id') id: string,
+    @Body('checked') checked: boolean,
+  ) {
+    return this.kanbanTasksService.updateChecklistItem(id, checked);
+  }
   @Post(':taskId/add/:userId')
   addEmployeeToTask(
     @Param('taskId') taskId: string,

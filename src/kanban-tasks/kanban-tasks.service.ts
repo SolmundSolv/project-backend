@@ -151,7 +151,6 @@ export class KanbanTasksService {
       },
     });
   }
-
   async findAllBoard(boardId: string) {
     return await this.prisma.kanbanColumn.findMany({
       where: {
@@ -162,6 +161,8 @@ export class KanbanTasksService {
           include: {
             KanbanTaskLabel: true,
             KanbanTaskAttachment: true,
+            KanbanTaskComment: true,
+            Employee: true,
           },
         },
       },
@@ -274,7 +275,16 @@ export class KanbanTasksService {
       },
     });
   }
-
+  updateChecklistItem(id: string, checked: boolean) {
+    return this.prisma.kanbanTaskChecklistItem.update({
+      where: {
+        id,
+      },
+      data: {
+        checked,
+      },
+    });
+  }
   update(id: number, updateKanbanTaskDto: UpdateKanbanTaskDto) {
     return `This action updates a #${id} kanbanTask`;
   }

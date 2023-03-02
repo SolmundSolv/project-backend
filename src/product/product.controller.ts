@@ -85,10 +85,20 @@ export class ProductController {
   deleteMaintenceStatus(@Param('id') id: string) {
     return this.productService.deleteMaintanceStatus(id);
   }
-
   @Get('maintenance/:id')
   maintenance(@Param('id') id: string) {
     return this.productService.findMaintance(id);
+  }
+  @Get('maintenance/scheduled/count')
+  maintenceScheduledCost() {
+    return this.productService.maintenceScheduledCountLast30Days();
+  }
+  @Post('maintenance/raport')
+  maintenceRaport(@Body() raport: { startDate: string; endDate: string }) {
+    return this.productService.maintenceRaport(
+      raport.startDate,
+      raport.endDate,
+    );
   }
 
   @Post('maintenance')

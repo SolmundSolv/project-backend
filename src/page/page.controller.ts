@@ -26,6 +26,57 @@ export class PageController {
       createPageDto.value,
     );
   }
+  @Post('section/:id')
+  createSection(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      name: string;
+      value: string;
+      iconPath?: string;
+    },
+  ) {
+    return this.pageService.createPageSection(
+      id,
+      body.name,
+      body.value,
+      body.iconPath,
+    );
+  }
+  @Get('section/:id')
+  getSection(@Param('id') id: string) {
+    return this.pageService.getPageSections(id);
+  }
+  @Get('section/one/:id/')
+  getOneSection(@Param('id') id: string) {
+    return this.pageService.getOnePageSection(id);
+  }
+  @Get('section')
+  getAllSection() {
+    return this.pageService.getAllPageSections();
+  }
+  @Delete('section/:id')
+  deleteSection(@Param('id') id: string) {
+    return this.pageService.deletePageSection(id);
+  }
+  @Patch('section/:id')
+  updateSection(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      name: string;
+      value: string;
+      iconPath?: string;
+    },
+  ) {
+    return this.pageService.updatePageSection(
+      id,
+      body.name,
+      body.value,
+      body.iconPath,
+    );
+  }
+
   @Get('info')
   getCompanyInfo() {
     return this.pageService.getCompanyInfo();

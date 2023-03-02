@@ -56,13 +56,9 @@ export class ProductService {
         price: true,
       },
     });
-    const numberOfOrders = await this.prisma.order.count({
+    const numberOfOrders = await this.prisma.productHistory.count({
       where: {
-        products: {
-          every: {
-            id: id,
-          },
-        },
+        productId: id,
       },
     });
     const lastMaintance = await this.prisma.maintenance.findFirst({
@@ -217,13 +213,17 @@ export class ProductService {
     const maintance = await this.prisma.maintenance.findFirst({
       where: {
         productId: data.productId,
-        maintenanceStatus: {
-          NOT: {
-            name: 'Finished' || 'Failed',
+        NOT: {
+          maintenanceStatus: {
+            name: 'Finnished' || 'Failed',
           },
         },
       },
+      include: {
+        maintenanceStatus: true,
+      },
     });
+    console.log(maintance);
     if (maintance) {
       throw new HttpException(
         'Product is already in maintance',
@@ -382,5 +382,47 @@ export class ProductService {
         createdAt: 'desc',
       },
     });
+  }
+  async maintenceRaport(from: string, to: string) {
+    const daily = [];
+    const fromStart = new Date(from).setHours(0, 0, 0, 0);
+    const toStart = new Date(to).setHours(0, 0, 0, 0);
+    const days = (toStart - fromStart) / (1000 * 60 * 60 * 24);
+    for (let i = 0; i <= days; i++) {
+      const date = new Date(fromStart + (i + 1) * 24 * 60 * 60 * 1000);
+      const res = await this.prisma.maintenance.aggregate({
+        where: {
+          createdAt: {
+            gte: new Date(date),
+            lt: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+        _sum: {
+          price: true,
+        },
+        _count: {
+          id: true,
+        },
+      });
+      daily.push({
+        date: date,
+        noOfMaintenance: res._count.id ?? 0,
+        total: res._sum.price ?? 0,
+      });
+    }
+    return daily;
+  }
+  async maintenceScheduledCountLast30Days() {
+    const res = await this.prisma.maintenance.count({
+      where: {
+        createdAt: {
+          gte: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+        },
+        maintenanceStatus: {
+          name: 'Scheduled',
+        },
+      },
+    });
+    return res;
   }
 }

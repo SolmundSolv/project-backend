@@ -9,6 +9,8 @@ import {
 export class CreateOrderDto {
   @IsOptional()
   readonly customer: string;
+  @IsOptional()
+  readonly rentStart: string;
   @IsNotEmpty()
   readonly name: string;
   @IsNotEmpty()

@@ -150,11 +150,11 @@ export class EmployeeService {
     });
   }
 
-  async createRole(name: string, description: string) {
+  async createRole(name: string) {
     return await this.prisma.employeeRole.create({
       data: {
         name: name,
-        status: description,
+        status: 'description',
       },
     });
   }
@@ -227,8 +227,22 @@ export class EmployeeService {
     }
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+  async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
+    return await this.prisma.employee.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: updateEmployeeDto.name,
+        email: updateEmployeeDto.email,
+        phone: updateEmployeeDto.phone,
+        address: updateEmployeeDto.address,
+        city: updateEmployeeDto.city,
+        zip: updateEmployeeDto.zip,
+        country: updateEmployeeDto.country,
+        status: 'ACTIVE',
+      },
+    });
   }
 
   async remove(id: string) {
@@ -252,6 +266,23 @@ export class EmployeeService {
             id: roleId,
           },
         },
+      },
+    });
+  }
+  updateRole(id: string, name: string) {
+    return this.prisma.employeeRole.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: name,
+      },
+    });
+  }
+  deleteRole(id: string) {
+    return this.prisma.employeeRole.delete({
+      where: {
+        id: id,
       },
     });
   }

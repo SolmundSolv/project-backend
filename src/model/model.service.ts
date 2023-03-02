@@ -28,6 +28,20 @@ export class ProductService {
             };
           }),
         },
+        Products: {
+          create: createProductDto.products.map((item) => {
+            return {
+              serialNumer: item.serialNumer,
+              boughtAt: item.boughtAt,
+              warranty: item.warranty,
+              ProductStatus: {
+                connect: {
+                  id: 'clb3fhehx0000tk74rm7oibs7',
+                },
+              },
+            };
+          }),
+        },
       },
     });
   }
@@ -139,7 +153,7 @@ export class ProductService {
     const res = await this.prisma.category.findMany();
     return res;
   }
-  async get5Random() {
+  async get5Last() {
     const res = await this.prisma.model.findMany({
       include: {
         category: true,
@@ -150,5 +164,35 @@ export class ProductService {
       take: 5,
     });
     return res;
+  }
+
+  async productRaport(from: string, to: string) {
+    const modelsId = await this.prisma.model.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    const models = [];
+    for (const model of modelsId) {
+      const count = await this.prisma.productHistory.count({
+        where: {
+          Product: {
+            modelId: model.id,
+          },
+          createdAt: {
+            gte: new Date(from),
+            lte: new Date(to),
+          },
+        },
+      });
+      models.push({
+        id: model.id,
+        name: model.name,
+        count: count,
+      });
+    }
+
+    return models;
   }
 }

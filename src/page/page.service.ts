@@ -129,4 +129,76 @@ export class PageService {
       },
     });
   }
+  createPageSection(
+    pageId: string,
+    title: string,
+    value: string,
+    iconPath?: string,
+  ) {
+    return this.prisma.pageSection.create({
+      data: {
+        name: title,
+        value: value,
+        iconPath: iconPath ? iconPath : null,
+        Page: {
+          connect: {
+            id: pageId,
+          },
+        },
+      },
+    });
+  }
+  getPageSections(pageId: string) {
+    return this.prisma.pageSection.findMany({
+      where: {
+        Page: {
+          id: pageId,
+        },
+      },
+      include: {
+        Page: true,
+      },
+    });
+  }
+  getAllPageSections() {
+    return this.prisma.pageSection.findMany({
+      include: {
+        Page: true,
+      },
+    });
+  }
+  getOnePageSection(id: string) {
+    return this.prisma.pageSection.findUnique({
+      where: {
+        id: id,
+      },
+      include: {
+        Page: true,
+      },
+    });
+  }
+  updatePageSection(
+    id: string,
+    title: string,
+    value: string,
+    iconPath?: string,
+  ) {
+    return this.prisma.pageSection.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: title,
+        value: value,
+        iconPath: iconPath ? iconPath : null,
+      },
+    });
+  }
+  deletePageSection(id: string) {
+    return this.prisma.pageSection.delete({
+      where: {
+        id: id,
+      },
+    });
+  }
 }

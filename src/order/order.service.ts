@@ -85,17 +85,26 @@ export class OrderService {
           },
         },
         rentDays: createOrderDto.rentDays,
+        rentStart: createOrderDto.rentStart ? createOrderDto.rentStart : null,
+        payment: {
+          create: {
+            price: createOrderDto.price,
+            PaymentStatus: {
+              connectOrCreate: {
+                where: {
+                  name: 'Unpaid',
+                },
+                create: {
+                  name: 'Unpaid',
+                },
+              },
+            },
+          },
+        },
       },
       include: {
         products: true,
         customer: true,
-      },
-    });
-    console.log('Delete cart', createOrderDto.cartId);
-
-    await this.prisma.cart.delete({
-      where: {
-        id: createOrderDto.cartId,
       },
     });
 
@@ -336,10 +345,12 @@ export class OrderService {
       },
       select: {
         price: true,
+        rentDays: true,
       },
     });
     //update order price
-    const newOrderPrice = orderPrice.price.toNumber() + price.price;
+    const newOrderPrice =
+      orderPrice.price.toNumber() + price.price * orderPrice.rentDays;
 
     let arr = [];
     for (let i = 0; i < productsId.selectedProducts.length; i++) {
@@ -347,12 +358,24 @@ export class OrderService {
     }
 
     const items = await this.findAvailableProduct(arr);
-    this.changeProductStatus(
-      items.map((item) => item.id),
-      'clda6pydg0004tkr46f1wfjqj', //in order
-    );
+    for (let i = 0; i < items.length; i++) {
+      await this.prisma.productHistory.create({
+        data: {
+          Product: {
+            connect: {
+              id: items[i].id,
+            },
+          },
+          Order: {
+            connect: {
+              id: orderId,
+            },
+          },
+        },
+      });
+    }
 
-    return this.prisma.order.update({
+    const res = await this.prisma.order.update({
       where: {
         id: orderId,
       },
@@ -367,6 +390,11 @@ export class OrderService {
         price: newOrderPrice,
       },
     });
+    this.changeProductStatus(
+      items.map((item) => item.id),
+      'clda6pydg0004tkr46f1wfjqj', //in order
+    );
+    return res;
   }
 
   procideOrder(orderId: string) {
@@ -547,5 +575,49 @@ export class OrderService {
         createdAt: 'desc',
       },
     });
+  }
+
+  async orderRaport(from: string, to: string) {
+    console.log(from, to);
+    const daily = [];
+    const fromStart = new Date(from).setHours(0, 0, 0, 0);
+    const toStart = new Date(to).setHours(0, 0, 0, 0);
+    const days = (toStart - fromStart) / (1000 * 60 * 60 * 24);
+    for (let i = 0; i <= days; i++) {
+      const date = new Date(fromStart + (i + 1) * 24 * 60 * 60 * 1000);
+      const res = await this.prisma.order.aggregate({
+        where: {
+          createdAt: {
+            gte: new Date(date),
+            lt: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+        _sum: {
+          price: true,
+        },
+        _count: {
+          id: true,
+        },
+      });
+      const res2 = await this.prisma.productHistory.aggregate({
+        where: {
+          createdAt: {
+            gte: new Date(date),
+            lt: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+        _count: {
+          id: true,
+        },
+      });
+      daily.push({
+        date: date,
+        noOfOrders: res._count.id ?? 0,
+        noProducts: res2._count.id ?? 0,
+        tax: res._sum.price ?? 0,
+        total: res._sum.price ?? 0,
+      });
+    }
+    return daily;
   }
 }

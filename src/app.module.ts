@@ -18,6 +18,7 @@ import { EmailModule } from './email/email.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PageModule } from './page/page.module';
 import { NavigationModule } from './navigation/navigation.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { NavigationModule } from './navigation/navigation.module';
     EmailModule,
     PageModule,
     NavigationModule,
+    StripeModule,
   ],
 })
 export class AppModule implements NestModule {

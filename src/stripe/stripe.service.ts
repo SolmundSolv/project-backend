@@ -125,8 +125,7 @@ export class StripeService {
   }
 
   async webhook(body: Buffer, sig: string) {
-    const secret =
-      'whsec_86ea122e823963a5982e1f5711fed171e4a90adafc0c0ef65661aec78b2fe219';
+    const secret = this.config.get('STRIPE_WEBHOOK_SECRET');
     // Only verify the event if you have an endpoint secret defined.
     // Otherwise use the basic event deserialized with JSON.parse
     if (secret) {
